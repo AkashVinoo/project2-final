@@ -1,0 +1,15 @@
+name: CI
+on: [push]
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Basic smoke test
+        run: python -c "import pandas, numpy, requests; print('ok')"
