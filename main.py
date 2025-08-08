@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.responses import JSONResponse
 from typing import List, Optional
 import uvicorn
@@ -10,13 +10,19 @@ app = FastAPI(title="Data Analyst Agent")
 
 @app.post("/api/")
 async def analyze(
-    questions: UploadFile = File(..., alias="questions.txt"),
+    request: Request,
+    questions: Optional[UploadFile] = File(None, alias="questions"),
+    questions_txt: Optional[UploadFile] = File(None, alias="questions.txt"),
     files: Optional[List[UploadFile]] = File(None)
 ):
-    # read questions.txt
-    q_text = (await questions.read()).decode("utf-8")
+    # Use whichever is provided
+    q_file = questions or questions_txt
+    if not q_file:
+        raise HTTPException(status_code=400, detail="Missing questions.txt or questions file")
+    
+    q_text = (await q_file.read()).decode("utf-8")
 
-    # save attachments to temp folder
+    # Save attachments to temp folder
     tmpdir = tempfile.mkdtemp(prefix="daa_")
     saved_files = {}
     if files:
