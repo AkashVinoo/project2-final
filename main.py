@@ -10,10 +10,10 @@ app = FastAPI(title="Data Analyst Agent")
 
 @app.post("/api/")
 async def analyze(
-    questions: UploadFile = File(...),
+    questions: UploadFile = File(..., alias="questions.txt"),
     files: Optional[List[UploadFile]] = File(None)
 ):
-    # read questions
+    # read questions.txt
     q_text = (await questions.read()).decode("utf-8")
 
     # save attachments to temp folder
@@ -33,6 +33,7 @@ async def analyze(
         raise HTTPException(status_code=500, detail=str(e))
 
     return JSONResponse(content=result)
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
