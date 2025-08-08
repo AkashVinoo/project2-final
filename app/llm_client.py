@@ -3,16 +3,19 @@ import openai
 from dotenv import load_dotenv
 
 load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if OPENAI_API_KEY:
-    openai.api_key = OPENAI_API_KEY
+
+# Use AI Proxy token
+AIPROXY_TOKEN = os.getenv("AIPROXY_TOKEN")
+if AIPROXY_TOKEN:
+    openai.api_key = AIPROXY_TOKEN
+    openai.base_url = "https://aiproxy.sanand.workers.dev/openai/"  # proxy endpoint
 
 def call_openai(prompt: str, model: str = "gpt-4o-mini"):
     """
-    Calls the OpenAI API with the given prompt.
+    Calls the AI Proxy (which forwards to OpenAI) with the given prompt.
     Returns the text content of the first choice, or None on failure.
     """
-    if not OPENAI_API_KEY:
+    if not AIPROXY_TOKEN:
         return None
     try:
         resp = openai.ChatCompletion.create(
@@ -22,5 +25,6 @@ def call_openai(prompt: str, model: str = "gpt-4o-mini"):
             temperature=0,
         )
         return resp.choices[0].message.content
-    except Exception:
+    except Exception as e:
+        print(f"OpenAI Proxy call failed: {e}")
         return None
