@@ -1,4 +1,16 @@
+import os
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+from tempfile import NamedTemporaryFile
 from typing import List, Optional
+from app.utils import process_request
+
+# Must be **before any route decorators**
+app = FastAPI()
+
+@app.get("/")
+def root():
+    return {"message": "Data Analyst Agent API is running"}
 
 @app.post("/api/")
 async def analyze(
