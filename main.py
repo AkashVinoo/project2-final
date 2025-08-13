@@ -1,9 +1,10 @@
 # main.py
-from fastapi import FastAPI, File, UploadFile
+import os
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import JSONResponse
 from tempfile import NamedTemporaryFile
+from typing import List, Optional
 from app.utils import process_request
-import os
 
 app = FastAPI()
 
@@ -13,16 +14,16 @@ def root():
 
 @app.post("/api/")
 async def analyze(
-    questions_txt: UploadFile = File(...),  # Form field name must match curl
-    attachments: list[UploadFile] = None    # Optional additional files
+    question_file: UploadFile = File(...),
+    attachments: Optional[List[UploadFile]] = File(None)  # handle zero or more attachments
 ):
     try:
-        # Save questions.txt temporarily
+        # Save the uploaded question file to a temporary location
         with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
-            tmp_q.write(await questions_txt.read())
+            tmp_q.write(await question_file.read())
             tmp_q_path = tmp_q.name
 
-        # Save attachments temporarily
+        # Save attachments (if any)
         attachment_paths = []
         if attachments:
             for file in attachments:
@@ -33,13 +34,13 @@ async def analyze(
         # Process request
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
-        # Cleanup temporary files
+        # Clean up temp files
         try:
             os.remove(tmp_q_path)
             for p in attachment_paths:
                 os.remove(p)
         except:
-            pass
+            pass  # ignore cleanup errors
 
         return JSONResponse(content=result)
 
