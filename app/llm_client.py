@@ -1,17 +1,18 @@
-import os
+# llm_client.py
+
 import sys
 import openai
-from dotenv import load_dotenv
 
-load_dotenv()
-
-# Load AI Proxy token from environment
-AIPROXY_TOKEN = os.getenv("AIPROXY_TOKEN")
+# =========================================
+# DIRECTLY HARDCODED AI PROXY TOKEN
+# =========================================
+# WARNING: Never commit real keys to public repos.
+# =========================================
+AIPROXY_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.wqLRMdaf0un4yfEhgvVEo9pBt9ASGeJ64nObOLWTgv0"
 
 if not AIPROXY_TOKEN:
     sys.stderr.write(
-        "[ERROR] Missing AIPROXY_TOKEN environment variable.\n"
-        "Please set it in your Render Environment Variables.\n"
+        "[ERROR] Missing AI Proxy token.\n"
     )
     sys.exit(1)
 
