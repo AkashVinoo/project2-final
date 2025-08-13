@@ -15,7 +15,7 @@ def root():
 @app.post("/api/")
 async def analyze(
     question_file: UploadFile = File(...),
-    attachments: Optional[List[UploadFile]] = File(None)  # handle zero or more attachments
+    attachments: Optional[List[UploadFile]] = File(None, alias="attachments[]")
 ):
     try:
         # Save the uploaded question file to a temporary location
@@ -40,7 +40,7 @@ async def analyze(
             for p in attachment_paths:
                 os.remove(p)
         except:
-            pass  # ignore cleanup errors
+            pass  # Ignore cleanup errors
 
         return JSONResponse(content=result)
 
