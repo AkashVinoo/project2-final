@@ -17,7 +17,7 @@ if not AIPROXY_TOKEN:
 
 # Configure OpenAI to use AI Proxy
 openai.api_key = AIPROXY_TOKEN
-openai.api_base = "https://aiproxy.sanand.workers.dev/v1"
+openai.api_base = "https://aiproxy.sanand.workers.dev/openai"
 
 def call_openai(prompt: str, model: str = "gpt-4o-mini"):
     """
