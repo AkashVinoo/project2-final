@@ -5,15 +5,14 @@ from app.llm_client import call_openai
 
 def process_request(question_file, attachments=None):
     """
-    Reads the question file, sends it to the LLM, and returns a structured response.
-    attachments: list of file paths for additional context (e.g., CSV, images)
+    Reads the question file, appends attachment info, calls AI Proxy, and returns result.
     """
     try:
         # Read the question file
         with open(question_file, "r", encoding="utf-8") as f:
             prompt = f.read()
 
-        # Append attachment details to prompt
+        # Append attachment details
         if attachments:
             prompt += "\n\nAttachments provided:\n"
             for file_path in attachments:
@@ -36,7 +35,7 @@ def process_request(question_file, attachments=None):
 
 def encode_file_to_base64(file_path):
     """
-    Utility to encode a file into base64 (used for images, etc.).
+    Encode a file into base64 for sending images or plots.
     """
     with open(file_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
