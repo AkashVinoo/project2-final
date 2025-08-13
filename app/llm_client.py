@@ -1,11 +1,17 @@
+# app/llm_client.py
 import requests
 
-# Your AI Proxy token (keep secret)
-AIPROXY_TOKEN = "YOUR_PROXY_TOKEN_HERE"
+# 🔐 Your AI Proxy token
+AIPROXY_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.wqLRMdaf0un4yfEhgvVEo9pBt9ASGeJ64nObOLWTgv0"
 
+# AI Proxy endpoint (OpenAI-compatible path)
 AIPROXY_URL = "https://aiproxy.sanand.workers.dev/v1/chat/completions"
 
 def call_openai(prompt: str, model: str = "gpt-4o-mini"):
+    """
+    Send a prompt to the AI Proxy and return the assistant message text.
+    Returns None on failure.
+    """
     try:
         headers = {
             "Authorization": f"Bearer {AIPROXY_TOKEN}",
