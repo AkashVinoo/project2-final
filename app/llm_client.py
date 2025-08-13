@@ -1,51 +1,33 @@
-# llm_client.py
+import requests
 
-import sys
-import openai
-import os
-
-# =========================================
-# HARDCODED AI PROXY TOKEN
-# =========================================
+# Your AI Proxy token (keep this secret)
 AIPROXY_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.wqLRMdaf0un4yfEhgvVEo9pBt9ASGeJ64nObOLWTgv0"
 
-# Optional: Direct OpenAI key (fallback)
-OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+# AI Proxy endpoint
+AIPROXY_URL = "https://aiproxy.sanand.workers.dev/v1/chat/completions"
 
-def call_openai(prompt: str, model: str = "gpt-4o-mini"):
+def call_ai_proxy(prompt: str, model: str = "gpt-4o-mini"):
     """
-    Try AI Proxy first. If it fails, fall back to direct OpenAI API.
+    Sends a prompt to the AI Proxy and returns the model's response.
+    No OpenAI API key is required — only the proxy token.
     """
-    # === Try via AI Proxy ===
     try:
-        openai.api_key = AIPROXY_TOKEN
-        openai.api_base = "https://aiproxy.sanand.workers.dev/openai/v1"  # FIXED path
-        resp = openai.ChatCompletion.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=800,
-            temperature=0,
-        )
-        return resp.choices[0].message.content
+        headers = {
+            "Authorization": f"Bearer {AIPROXY_TOKEN}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 800,
+            "temperature": 0
+        }
+        resp = requests.post(AIPROXY_URL, headers=headers, json=payload)
+        resp.raise_for_status()
+        data = resp.json()
 
-    except Exception as proxy_error:
-        print(f"[WARN] AI Proxy failed: {proxy_error}")
-
-        # === Fallback to direct OpenAI API ===
-        if not OPENAI_KEY:
-            print("[ERROR] No OpenAI API key found for fallback.")
-            return None
-
-        try:
-            openai.api_key = OPENAI_KEY
-            openai.api_base = "https://api.openai.com/v1"
-            resp = openai.ChatCompletion.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=800,
-                temperature=0,
-            )
-            return resp.choices[0].message.content
-        except Exception as e:
-            print(f"[ERROR] Direct OpenAI call failed: {e}")
-            return None
+        # Extract the model's reply
+        return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"[ERROR] AI Proxy call failed: {e}")
+        return None
