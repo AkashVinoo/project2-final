@@ -1,8 +1,8 @@
+# main.py
 import os
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from tempfile import NamedTemporaryFile
-from typing import List, Optional
 from app.utils import process_request
 
 app = FastAPI()
@@ -14,32 +14,32 @@ def root():
 @app.post("/api/")
 async def analyze(
     question_file: UploadFile = File(...),
-    attachments: Optional[List[UploadFile]] = File(None)
+    attachments: list[UploadFile] = File(default=None)  # must be File(), not just list
 ):
-    """
-    Receives one mandatory question file and zero or more attachments.
-    """
     try:
         # Save question file
         with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
             tmp_q.write(await question_file.read())
             tmp_q_path = tmp_q.name
 
-        # Save attachments
+        # Save attachments (if any)
         attachment_paths = []
         if attachments:
-            for f in attachments:
+            for file in attachments:
                 with NamedTemporaryFile(delete=False) as tmp_a:
-                    tmp_a.write(await f.read())
+                    tmp_a.write(await file.read())
                     attachment_paths.append(tmp_a.name)
 
         # Process request
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
-        # Cleanup
-        os.remove(tmp_q_path)
-        for p in attachment_paths:
-            os.remove(p)
+        # Clean up temp files
+        try:
+            os.remove(tmp_q_path)
+            for p in attachment_paths:
+                os.remove(p)
+        except:
+            pass
 
         return JSONResponse(content=result)
 
