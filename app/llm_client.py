@@ -8,7 +8,7 @@ load_dotenv()
 AIPROXY_TOKEN = os.getenv("AIPROXY_TOKEN")
 if AIPROXY_TOKEN:
     openai.api_key = AIPROXY_TOKEN
-    openai.base_url = "https://aiproxy.sanand.workers.dev/openai/"  # proxy endpoint
+    openai.api_base = "https://aiproxy.sanand.workers.dev/openai"  # proxy endpoint
 
 def call_openai(prompt: str, model: str = "gpt-4o-mini"):
     """
@@ -24,7 +24,7 @@ def call_openai(prompt: str, model: str = "gpt-4o-mini"):
             max_tokens=800,
             temperature=0,
         )
-        return resp.choices[0].message.content
+        return resp.choices[0].message["content"]
     except Exception as e:
         print(f"OpenAI Proxy call failed: {e}")
         return None
