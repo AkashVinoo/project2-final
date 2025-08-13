@@ -10,7 +10,7 @@ import os
 AIPROXY_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.wqLRMdaf0un4yfEhgvVEo9pBt9ASGeJ64nObOLWTgv0"
 
 # Optional: Direct OpenAI key (fallback)
-OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()  # set in environment OR hardcode here like "sk-..."
+OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 
 def call_openai(prompt: str, model: str = "gpt-4o-mini"):
     """
@@ -19,7 +19,7 @@ def call_openai(prompt: str, model: str = "gpt-4o-mini"):
     # === Try via AI Proxy ===
     try:
         openai.api_key = AIPROXY_TOKEN
-        openai.api_base = "https://aiproxy.sanand.workers.dev/v1"
+        openai.api_base = "https://aiproxy.sanand.workers.dev/openai/v1"  # FIXED path
         resp = openai.ChatCompletion.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
