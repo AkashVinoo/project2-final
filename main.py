@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import JSONResponse
 from tempfile import NamedTemporaryFile
 from typing import List, Optional
@@ -16,6 +16,9 @@ async def analyze(
     question_file: UploadFile = File(...),
     attachments: Optional[List[UploadFile]] = File(None)
 ):
+    """
+    Receives one mandatory question file and zero or more attachments.
+    """
     try:
         # Save question file
         with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
@@ -33,7 +36,7 @@ async def analyze(
         # Process request
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
-        # Clean up
+        # Cleanup
         os.remove(tmp_q_path)
         for p in attachment_paths:
             os.remove(p)
