@@ -2,30 +2,24 @@
 
 import sys
 import openai
+import os
 
 # =========================================
-# DIRECTLY HARDCODED AI PROXY TOKEN
-# =========================================
-# WARNING: Never commit real keys to public repos.
+# HARDCODED AI PROXY TOKEN
 # =========================================
 AIPROXY_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.wqLRMdaf0un4yfEhgvVEo9pBt9ASGeJ64nObOLWTgv0"
 
-if not AIPROXY_TOKEN:
-    sys.stderr.write(
-        "[ERROR] Missing AI Proxy token.\n"
-    )
-    sys.exit(1)
-
-# Configure OpenAI to use AI Proxy
-openai.api_key = AIPROXY_TOKEN
-openai.api_base = "https://aiproxy.sanand.workers.dev/openai"
+# Optional: Direct OpenAI key (fallback)
+OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()  # set in environment OR hardcode here like "sk-..."
 
 def call_openai(prompt: str, model: str = "gpt-4o-mini"):
     """
-    Calls the AI Proxy (which forwards to OpenAI) with the given prompt.
-    Returns the text content of the first choice, or None on failure.
+    Try AI Proxy first. If it fails, fall back to direct OpenAI API.
     """
+    # === Try via AI Proxy ===
     try:
+        openai.api_key = AIPROXY_TOKEN
+        openai.api_base = "https://aiproxy.sanand.workers.dev/v1"
         resp = openai.ChatCompletion.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],
@@ -33,6 +27,25 @@ def call_openai(prompt: str, model: str = "gpt-4o-mini"):
             temperature=0,
         )
         return resp.choices[0].message.content
-    except Exception as e:
-        print(f"OpenAI Proxy call failed: {e}")
-        return None
+
+    except Exception as proxy_error:
+        print(f"[WARN] AI Proxy failed: {proxy_error}")
+
+        # === Fallback to direct OpenAI API ===
+        if not OPENAI_KEY:
+            print("[ERROR] No OpenAI API key found for fallback.")
+            return None
+
+        try:
+            openai.api_key = OPENAI_KEY
+            openai.api_base = "https://api.openai.com/v1"
+            resp = openai.ChatCompletion.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=800,
+                temperature=0,
+            )
+            return resp.choices[0].message.content
+        except Exception as e:
+            print(f"[ERROR] Direct OpenAI call failed: {e}")
+            return None
