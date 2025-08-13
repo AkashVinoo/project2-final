@@ -1,28 +1,17 @@
-# main.py
-import os
-from fastapi import FastAPI, File, UploadFile, Form
-from fastapi.responses import JSONResponse
-from tempfile import NamedTemporaryFile
-from app.utils import process_request
-
-app = FastAPI()
-
-@app.get("/")
-def root():
-    return {"message": "Data Analyst Agent API is running"}
+from typing import List, Optional
 
 @app.post("/api/")
 async def analyze(
     question_file: UploadFile = File(...),
-    attachments: list[UploadFile] = None
+    attachments: Optional[List[UploadFile]] = File(None)
 ):
     try:
-        # Save the uploaded question file to a temporary location
+        # Save the uploaded question file
         with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
             tmp_q.write(await question_file.read())
             tmp_q_path = tmp_q.name
 
-        # Save attachments (if any)
+        # Save attachments
         attachment_paths = []
         if attachments:
             for file in attachments:
@@ -33,13 +22,13 @@ async def analyze(
         # Process request
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
-        # Clean up temp files
+        # Cleanup
         try:
             os.remove(tmp_q_path)
             for p in attachment_paths:
                 os.remove(p)
         except:
-            pass  # Ignore cleanup errors
+            pass
 
         return JSONResponse(content=result)
 
