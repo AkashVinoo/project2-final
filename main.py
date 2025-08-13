@@ -14,7 +14,7 @@ def root():
 @app.post("/api/")
 async def analyze(
     question_file: UploadFile = File(...),
-    attachments: list[UploadFile] = File(default=None)  # must be File(), not just list
+    attachments: list[UploadFile] = File(default=[])
 ):
     try:
         # Save question file
@@ -22,24 +22,20 @@ async def analyze(
             tmp_q.write(await question_file.read())
             tmp_q_path = tmp_q.name
 
-        # Save attachments (if any)
+        # Save attachments
         attachment_paths = []
-        if attachments:
-            for file in attachments:
-                with NamedTemporaryFile(delete=False) as tmp_a:
-                    tmp_a.write(await file.read())
-                    attachment_paths.append(tmp_a.name)
+        for file in attachments:
+            with NamedTemporaryFile(delete=False) as tmp_a:
+                tmp_a.write(await file.read())
+                attachment_paths.append(tmp_a.name)
 
         # Process request
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
         # Clean up temp files
-        try:
-            os.remove(tmp_q_path)
-            for p in attachment_paths:
-                os.remove(p)
-        except:
-            pass
+        os.remove(tmp_q_path)
+        for p in attachment_paths:
+            os.remove(p)
 
         return JSONResponse(content=result)
 
