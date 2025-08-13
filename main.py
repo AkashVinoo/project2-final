@@ -17,25 +17,29 @@ async def analyze(
     attachments: list[UploadFile] = File(default=[])
 ):
     try:
-        # Save question file
+        # Save the uploaded question file to a temporary location
         with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
             tmp_q.write(await question_file.read())
             tmp_q_path = tmp_q.name
 
-        # Save attachments
+        # Save attachments (if any)
         attachment_paths = []
-        for file in attachments:
-            with NamedTemporaryFile(delete=False) as tmp_a:
-                tmp_a.write(await file.read())
-                attachment_paths.append(tmp_a.name)
+        if attachments:
+            for file in attachments:
+                with NamedTemporaryFile(delete=False) as tmp_a:
+                    tmp_a.write(await file.read())
+                    attachment_paths.append(tmp_a.name)
 
         # Process request
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
         # Clean up temp files
-        os.remove(tmp_q_path)
-        for p in attachment_paths:
-            os.remove(p)
+        try:
+            os.remove(tmp_q_path)
+            for p in attachment_paths:
+                os.remove(p)
+        except:
+            pass  # Ignore cleanup errors
 
         return JSONResponse(content=result)
 
