@@ -15,14 +15,28 @@ def root():
 async def analyze(request: Request):
     try:
         form = await request.form()
-        files = [v for v in form.values() if isinstance(v, UploadFile)]
+        files = []
+        question_text = None
 
-        if not files:
-            return JSONResponse({"error": "No files uploaded"}, status_code=422)
+        # Process each field in the form
+        for key, value in form.items():
+            if isinstance(value, UploadFile):
+                files.append(value)
+            else:
+                # If it's a text field, treat it as the questions file
+                if key.lower().endswith(".txt") and question_text is None:
+                    question_text = str(value)
 
         tmp_q_path = None
         attachment_paths = []
 
+        # Handle questions from text field
+        if question_text:
+            with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
+                tmp_q.write(question_text.encode("utf-8"))
+                tmp_q_path = tmp_q.name
+
+        # Handle uploaded files
         for file in files:
             suffix = f".{file.filename.split('.')[-1]}"
             with NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
@@ -33,7 +47,7 @@ async def analyze(request: Request):
                     attachment_paths.append(tmp_file.name)
 
         if not tmp_q_path:
-            return JSONResponse({"error": "Missing required text file"}, status_code=422)
+            return JSONResponse({"error": "Missing questions text file"}, status_code=422)
 
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
