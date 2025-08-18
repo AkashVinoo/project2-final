@@ -1,20 +1,21 @@
 # app/llm_client.py
-from aipipe import AI
+from aipipe import AIPipe
 
 # 🔐 Your AI Pipe token
 AIPIPE_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.yyhzLRnLWkmCpvPFx3GvZIT8Bb8fjxTBEZmLRbaMLx8"
 
 # Initialize AI Pipe client
-ai = AI(api_key=AIPIPE_TOKEN, model="gpt-4o-mini")
+client = AIPipe(api_key=AIPIPE_TOKEN)
 
-def call_openai(prompt: str):
+def call_openai(prompt: str, model: str = "gpt-4o-mini"):
     """
-    Send a prompt to AI Pipe and return the assistant message.
-    Returns None if call fails.
+    Send a prompt to AI Pipe and return the assistant message text.
+    Returns None on failure.
     """
     try:
-        response = ai.chat(prompt)
-        return response
+        response = client.chat(prompt, model=model, max_tokens=800, temperature=0)
+        # AI Pipe response is usually a dict with 'content' or similar
+        return response.get("content", None)
     except Exception as e:
         print(f"[ERROR] AI Pipe call failed: {e}")
         return None
