@@ -26,7 +26,7 @@ def process_request(question_file, attachments=None):
         answer = call_openai(prompt)
 
         if not answer:
-            return {"error": "AI call failed or returned no content"}
+            return {"error": "AI Pipe call failed or returned no content"}
 
         return {"answer": answer}
 
