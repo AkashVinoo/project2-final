@@ -1,60 +1,50 @@
-# main.py
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from tempfile import NamedTemporaryFile
 from app.utils import process_request
+from typing import List, Optional
 
 app = FastAPI()
-
 
 @app.get("/")
 def root():
     return {"message": "Data Analyst Agent API is running"}
 
-
 @app.post("/api/")
-async def analyze(request: Request):
+async def analyze(
+    all_files: List[UploadFile] = File(...)
+):
     try:
-        form = await request.form()
         tmp_q_path = None
         attachment_paths = []
+        text_file_found = False
 
-        print("Received form fields:", list(form.keys()))
+        print("Received files:")
+        for file in all_files:
+            print(f"Filename: {file.filename}")
 
-        for key, value in form.items():
-            if hasattr(value, "filename"):  # only handle files
-                print(f"Processing file: {value.filename}")
-
-                file_bytes = await value.read()
-
-                if value.filename.endswith(".txt") and tmp_q_path is None:
-                    # Treat the first .txt as the questions.txt
-                    with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
-                        tmp_q.write(file_bytes)
-                        tmp_q_path = tmp_q.name
-                else:
-                    # Other files -> attachments
-                    ext = value.filename.split(".")[-1]
-                    with NamedTemporaryFile(delete=False, suffix=f".{ext}") as tmp_a:
-                        tmp_a.write(file_bytes)
-                        attachment_paths.append(tmp_a.name)
+        for file in all_files:
+            if file.filename.endswith(".txt") and not text_file_found:
+                with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
+                    tmp_q.write(await file.read())
+                    tmp_q_path = tmp_q.name
+                    text_file_found = True
+            else:
+                with NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}") as tmp_a:
+                    tmp_a.write(await file.read())
+                    attachment_paths.append(tmp_a.name)
 
         if not tmp_q_path:
-            return JSONResponse(
-                content={"error": "Missing required questions.txt"},
-                status_code=422
-            )
+            return JSONResponse(content={"error": "Missing required text file for analysis"}, status_code=422)
 
-        # Call your pipeline
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
-        # Cleanup
         try:
             os.remove(tmp_q_path)
             for p in attachment_paths:
                 os.remove(p)
-        except Exception:
+        except:
             pass
 
         return JSONResponse(content=result)
