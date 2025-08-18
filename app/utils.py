@@ -1,7 +1,7 @@
 # app/utils.py
 import os
 import base64
-from .llm_client import call_openai
+from .llm_client import call_openai # Changed from app.llm_client
 
 def process_request(question_file, attachments=None):
     """
