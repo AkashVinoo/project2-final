@@ -9,4 +9,4 @@ duckdb
 pyarrow
 python-multipart
 requests
-aipipe
+aipipe>=0.1.0
