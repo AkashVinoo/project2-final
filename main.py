@@ -1,52 +1,20 @@
-# main.py
-import os
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
-from tempfile import NamedTemporaryFile
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from app.utils import process_request
-from typing import List
 
 app = FastAPI()
 
-@app.get("/")
-def root():
-    return {"message": "Data Analyst Agent API is running with Hugging Face LLM"}
+class RequestBody(BaseModel):
+    prompt: str
 
 @app.post("/api/")
-async def analyze(all_files: List[UploadFile] = File(...)):
+def handle_request(body: RequestBody):
     try:
-        tmp_q_path = None
-        attachment_paths = []
-        text_file_found = False
-
-        for file in all_files:
-            if file.filename.endswith(".txt") and not text_file_found:
-                with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
-                    tmp_q.write(await file.read())
-                    tmp_q_path = tmp_q.name
-                    text_file_found = True
-            else:
-                with NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}") as tmp_a:
-                    tmp_a.write(await file.read())
-                    attachment_paths.append(tmp_a.name)
-
-        if not tmp_q_path:
-            return JSONResponse(
-                content={"error": "Missing required text file for analysis"},
-                status_code=422
-            )
-
-        result = process_request(tmp_q_path, attachments=attachment_paths)
-
-        # Cleanup temporary files
-        try:
-            os.remove(tmp_q_path)
-            for p in attachment_paths:
-                os.remove(p)
-        except:
-            pass
-
-        return JSONResponse(content=result)
-
+        result = process_request(body.prompt)
+        return result
     except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/")
+def root():
+    return {"status": "ok"}
