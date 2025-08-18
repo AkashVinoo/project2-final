@@ -1,9 +1,9 @@
 import requests
 
-# 🔐 AI Proxy token
+# 🔐 Your AI Proxy token
 AIPROXY_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.wqLRMdaf0un4yfEhgvVEo9pBt9ASGeJ64nObOLWTgv0"
 
-# AI Proxy OpenAI-compatible URL
+# AI Proxy endpoint (OpenAI-compatible path)
 AIPROXY_URL = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
 
 def call_openai(prompt: str, model: str = "gpt-4o-mini"):
