@@ -4,9 +4,8 @@ from .llm_client import call_openai
 
 def process_request(question_file, attachments=None):
     """
-    Reads the question file, sends it to the LLM via AI Proxy,
-    and returns a structured response.
-    attachments: list of file paths for additional context
+    Reads the question file, sends it to the LLM via AI Proxy, and returns structured response.
+    attachments: list of file paths for additional context (e.g., CSV, images)
     """
     try:
         with open(question_file, "r", encoding="utf-8") as f:
