@@ -35,11 +35,13 @@ async def analyze(all_files: List[UploadFile] = File(...)):
                     attachment_paths.append(tmp_a.name)
 
         if not tmp_q_path:
-            return JSONResponse(content={"error": "Missing required text file for analysis"}, status_code=422)
+            return JSONResponse(
+                content={"error": "Missing required text file for analysis"}, status_code=422
+            )
 
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
-        # Clean up temp files
+        # Cleanup temp files
         try:
             os.remove(tmp_q_path)
             for p in attachment_paths:
