@@ -1,33 +1,36 @@
-# app/llm_client.py
-import os
 import requests
 
-# 🔐 Your Hugging Face token (sign up at https://huggingface.co/settings/tokens)
-HF_TOKEN = os.environ.get("HF_TOKEN", "")  # You can also hardcode it for now
+# Hardcoded AI Pipe token and base URL
+AIPIPE_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.yyhzLRnLWkmCpvPFx3GvZIT8Bb8fjxTBEZmLRbaMLx8"
+BASE_URL = "https://aipipe.org/openai/v1"
 
-# Example: using a text-generation model
-HF_MODEL = "gpt2"  # Lightweight free model; can switch to bigger models like 'tiiuae/falcon-7b-instruct'
+HEADERS = {
+    "Authorization": f"Bearer {AIPIPE_TOKEN}",
+    "Content-Type": "application/json",
+}
 
-API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
+def call_openai_chat(prompt: str, model: str = "gpt-4o-mini"):
+    url = f"{BASE_URL}/responses"
+    payload = {"model": model, "input": prompt}
+    response = requests.post(url, headers=HEADERS, json=payload)
+    response.raise_for_status()
+    data = response.json()
+    
+    if "output" in data and len(data["output"]) > 0:
+        text_parts = []
+        for item in data["output"]:
+            for content in item.get("content", []):
+                if "text" in content:
+                    text_parts.append(content["text"])
+        return "\n".join(text_parts)
+    return ""
 
-def call_openai(prompt: str, model: str = None):
-    """
-    Sends prompt to Hugging Face Inference API and returns text.
-    """
-    try:
-        headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-        payload = {"inputs": prompt, "options": {"wait_for_model": True}}
-
-        resp = requests.post(API_URL, headers=headers, json=payload, timeout=60)
-        resp.raise_for_status()
-        data = resp.json()
-
-        # Hugging Face returns list of dicts: [{'generated_text': "..."}]
-        if isinstance(data, list) and "generated_text" in data[0]:
-            return data[0]["generated_text"]
-        else:
-            return str(data)
-
-    except Exception as e:
-        print(f"[ERROR] Hugging Face API call failed: {e}")
-        return None
+def call_openai_embedding(texts, model: str = "text-embedding-3-small"):
+    if isinstance(texts, str):
+        texts = [texts]
+    url = f"{BASE_URL}/embeddings"
+    payload = {"model": model, "input": texts}
+    response = requests.post(url, headers=HEADERS, json=payload)
+    response.raise_for_status()
+    data = response.json()
+    return [item["embedding"] for item in data.get("data", [])]
