@@ -9,5 +9,3 @@ duckdb
 pyarrow
 python-multipart
 requests
-# openai  <- keep only if some file still imports it; otherwise remove
-# python-dotenv <- keep only if you're using .env for other things
