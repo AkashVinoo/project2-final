@@ -1,9 +1,9 @@
+# main.py
 import os
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, Request, UploadFile
 from fastapi.responses import JSONResponse
 from tempfile import NamedTemporaryFile
 from app.utils import process_request
-from typing import List
 
 app = FastAPI()
 
@@ -12,19 +12,18 @@ def root():
     return {"message": "Data Analyst Agent API is running"}
 
 @app.post("/api/")
-async def analyze(
-    all_files: List[UploadFile] = File(...)
-):
+async def analyze(request: Request):
     try:
+        form = await request.form()
+        files = [v for v in form.values() if isinstance(v, UploadFile)]
+
+        if not files:
+            return JSONResponse({"error": "No files uploaded"}, status_code=422)
+
         tmp_q_path = None
         attachment_paths = []
 
-        print("Received files:")
-        for file in all_files:
-            print(f"Filename: {file.filename}")
-
-        # Save uploaded files to temporary paths
-        for file in all_files:
+        for file in files:
             suffix = f".{file.filename.split('.')[-1]}"
             with NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
                 tmp_file.write(await file.read())
@@ -34,14 +33,11 @@ async def analyze(
                     attachment_paths.append(tmp_file.name)
 
         if not tmp_q_path:
-            return JSONResponse(
-                content={"error": "Missing required text file for analysis"}, status_code=422
-            )
+            return JSONResponse({"error": "Missing required text file"}, status_code=422)
 
-        # Process request
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
-        # Clean up temporary files
+        # Clean up temp files
         try:
             os.remove(tmp_q_path)
             for p in attachment_paths:
@@ -49,7 +45,7 @@ async def analyze(
         except Exception:
             pass
 
-        return JSONResponse(content=result)
+        return JSONResponse(result)
 
     except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        return JSONResponse({"error": str(e)}, status_code=500)
