@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.responses import JSONResponse
 from tempfile import NamedTemporaryFile
 from app.utils import process_request
@@ -12,8 +12,14 @@ def root():
     return {"message": "Data Analyst Agent API is running"}
 
 @app.post("/api/")
-async def analyze(all_files: List[UploadFile] = File(...)):
+async def analyze(request: Request):
+    """
+    Accepts any uploaded files (text + attachments) without requiring specific form names.
+    """
     try:
+        form = await request.form()
+        all_files: List[UploadFile] = [v for v in form.values() if isinstance(v, UploadFile)]
+
         tmp_q_path = None
         attachment_paths = []
         text_file_found = False
