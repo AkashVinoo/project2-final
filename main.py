@@ -18,10 +18,6 @@ async def analyze(all_files: List[UploadFile] = File(...)):
         attachment_paths = []
         text_file_found = False
 
-        print("Received files:")
-        for file in all_files:
-            print(f"Filename: {file.filename}")
-
         for file in all_files:
             if file.filename.endswith(".txt") and not text_file_found:
                 with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
@@ -34,11 +30,10 @@ async def analyze(all_files: List[UploadFile] = File(...)):
                     attachment_paths.append(tmp_a.name)
 
         if not tmp_q_path:
-            return JSONResponse(content={"error": "Missing required text file for analysis"}, status_code=422)
+            return JSONResponse(content={"error": "Missing required text file"}, status_code=422)
 
         result = process_request(tmp_q_path, attachments=attachment_paths)
 
-        # Cleanup temp files
         try:
             os.remove(tmp_q_path)
             for p in attachment_paths:
