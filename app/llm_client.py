@@ -1,15 +1,15 @@
 import requests
 
-# 🔐 Your AI Proxy token
+# 🔐 AI Proxy token
 AIPROXY_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.wqLRMdaf0un4yfEhgvVEo9pBt9ASGeJ64nObOLWTgv0"
 
-# AI Proxy OpenAI-compatible endpoints
-AIPROXY_CHAT_URL = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
-AIPROXY_EMBED_URL = "https://aiproxy.sanand.workers.dev/openai/v1/embeddings"
+# AI Proxy OpenAI-compatible URL
+AIPROXY_URL = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
 
 def call_openai(prompt: str, model: str = "gpt-4o-mini"):
     """
-    Sends prompt to AI Proxy and returns assistant text.
+    Send a prompt to the AI Proxy and return the assistant message text.
+    Returns None on failure.
     """
     try:
         headers = {
@@ -22,7 +22,7 @@ def call_openai(prompt: str, model: str = "gpt-4o-mini"):
             "max_tokens": 800,
             "temperature": 0
         }
-        resp = requests.post(AIPROXY_CHAT_URL, headers=headers, json=payload, timeout=60)
+        resp = requests.post(AIPROXY_URL, headers=headers, json=payload, timeout=60)
         resp.raise_for_status()
         data = resp.json()
         return data["choices"][0]["message"]["content"]
