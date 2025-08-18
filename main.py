@@ -14,22 +14,24 @@ def root():
 
 @app.post("/api/")
 async def analyze(
-    question_file: UploadFile = File(...),
-    attachments: Optional[List[UploadFile]] = File(None)
+    all_files: List[UploadFile] = File(...)
 ):
     try:
-        # Save the uploaded question file to a temporary location
-        with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
-            tmp_q.write(await question_file.read())
-            tmp_q_path = tmp_q.name
-
-        # Save attachments (if any)
+        tmp_q_path = None
         attachment_paths = []
-        if attachments:
-            for file in attachments:
-                with NamedTemporaryFile(delete=False) as tmp_a:
-                    tmp_a.write(await file.read())
-                    attachment_paths.append(tmp_a.name)
+
+        # Process all uploaded files and separate them based on their original name
+        for file in all_files:
+            with NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}") as tmp_file:
+                tmp_file.write(await file.read())
+                
+                if file.filename == "questions.txt":
+                    tmp_q_path = tmp_file.name
+                else:
+                    attachment_paths.append(tmp_file.name)
+
+        if not tmp_q_path:
+            return JSONResponse(content={"error": "Missing required 'questions.txt' file"}, status_code=422)
 
         # Process the request
         result = process_request(tmp_q_path, attachments=attachment_paths)
