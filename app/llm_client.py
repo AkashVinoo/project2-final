@@ -14,7 +14,6 @@ def call_openai(prompt: str, model: str = "gpt-4o-mini"):
     """
     try:
         response = client.chat(prompt, model=model, max_tokens=800, temperature=0)
-        # AI Pipe response is usually a dict with 'content' or similar
         return response.get("content", None)
     except Exception as e:
         print(f"[ERROR] AI Pipe call failed: {e}")
