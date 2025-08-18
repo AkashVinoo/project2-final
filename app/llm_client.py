@@ -1,25 +1,31 @@
-# app/llm_client.py
-from aipipe import AI
+import requests
 
-# 🔐 Your AI Pipe token
-AIPIPE_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.yyhzLRnLWkmCpvPFx3GvZIT8Bb8fjxTBEZmLRbaMLx8"
+# 🔐 Your AI Proxy token
+AIPROXY_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6IjI0ZjIwMDA5MzVAZHMuc3R1ZHkuaWl0bS5hYy5pbiJ9.wqLRMdaf0un4yfEhgvVEo9pBt9ASGeJ64nObOLWTgv0"
 
-# Initialize the AI client
-ai_client = AI(api_key=AIPIPE_TOKEN)
+# Updated AI Proxy endpoint
+AIPROXY_URL = "https://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
 
 def call_openai(prompt: str, model: str = "gpt-4o-mini"):
     """
-    Sends a prompt to AI Pipe and returns the assistant message text.
+    Send a prompt to the AI Proxy and return the assistant message text.
     Returns None on failure.
     """
     try:
-        response = ai_client.chat(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=800,
-            temperature=0
-        )
-        return response["choices"][0]["message"]["content"]
+        headers = {
+            "Authorization": f"Bearer {AIPROXY_TOKEN}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 800,
+            "temperature": 0
+        }
+        resp = requests.post(AIPROXY_URL, headers=headers, json=payload, timeout=60)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
     except Exception as e:
-        print(f"[ERROR] AI Pipe call failed: {e}")
+        print(f"[ERROR] AI Proxy call failed: {e}")
         return None
