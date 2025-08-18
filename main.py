@@ -1,6 +1,6 @@
 # main.py
 import os
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from tempfile import NamedTemporaryFile
 from app.utils import process_request
@@ -19,19 +19,29 @@ async def analyze(
     try:
         tmp_q_path = None
         attachment_paths = []
+        text_file_found = False
 
-        # Process all uploaded files and separate them based on their original name
+        # --- NEW CODE START ---
+        print("Received files:")
         for file in all_files:
-            with NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}") as tmp_file:
-                tmp_file.write(await file.read())
-                
-                if file.filename == "questions.txt":
-                    tmp_q_path = tmp_file.name
-                else:
-                    attachment_paths.append(tmp_file.name)
+            print(f"Filename: {file.filename}")
+        # --- NEW CODE END ---
+
+        # Process all uploaded files
+        for file in all_files:
+            # Check for a .txt file
+            if file.filename.endswith(".txt") and not text_file_found:
+                with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
+                    tmp_q.write(await file.read())
+                    tmp_q_path = tmp_q.name
+                    text_file_found = True
+            else:
+                with NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}") as tmp_a:
+                    tmp_a.write(await file.read())
+                    attachment_paths.append(tmp_a.name)
 
         if not tmp_q_path:
-            return JSONResponse(content={"error": "Missing required 'questions.txt' file"}, status_code=422)
+            return JSONResponse(content={"error": "Missing required text file for analysis"}, status_code=422)
 
         # Process the request
         result = process_request(tmp_q_path, attachments=attachment_paths)
