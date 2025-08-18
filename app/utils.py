@@ -5,8 +5,8 @@ from .llm_client import call_openai
 
 def process_request(question_file, attachments=None):
     """
-    Reads the question file, sends it to the LLM, and returns a structured response.
-    attachments: list of file paths for additional context (e.g., CSV, images)
+    Reads the question file, sends it to the AI, and returns a structured response.
+    attachments: list of file paths for additional context (CSV, images, etc.)
     """
     try:
         # Read the question file
