@@ -1,11 +1,4 @@
 fastapi
-uvicorn
-pandas
-numpy
-matplotlib
-beautifulsoup4
-lxml
-duckdb
-pyarrow
-python-multipart
+uvicorn[standard]
 requests
+pydantic
