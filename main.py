@@ -3,7 +3,6 @@ from fastapi import FastAPI, Request, UploadFile
 from fastapi.responses import JSONResponse
 from tempfile import NamedTemporaryFile
 from app.utils import process_request
-from typing import List
 
 app = FastAPI()
 
@@ -14,25 +13,30 @@ def root():
 @app.post("/api/")
 async def analyze(request: Request):
     """
-    Accepts any uploaded files (text + attachments) without requiring specific form names.
+    Accepts all uploaded files, finds the first text file for the question,
+    and treats the rest as attachments.
     """
     try:
         form = await request.form()
-        all_files: List[UploadFile] = [v for v in form.values() if isinstance(v, UploadFile)]
+        all_files = [v for v in form.values() if isinstance(v, UploadFile)]
+
+        if not all_files:
+            return JSONResponse(content={"error": "No files received"}, status_code=422)
 
         tmp_q_path = None
         attachment_paths = []
         text_file_found = False
 
         for file in all_files:
+            content = await file.read()
             if file.filename.endswith(".txt") and not text_file_found:
                 with NamedTemporaryFile(delete=False, suffix=".txt") as tmp_q:
-                    tmp_q.write(await file.read())
+                    tmp_q.write(content)
                     tmp_q_path = tmp_q.name
                     text_file_found = True
             else:
                 with NamedTemporaryFile(delete=False, suffix=f".{file.filename.split('.')[-1]}") as tmp_a:
-                    tmp_a.write(await file.read())
+                    tmp_a.write(content)
                     attachment_paths.append(tmp_a.name)
 
         if not tmp_q_path:
