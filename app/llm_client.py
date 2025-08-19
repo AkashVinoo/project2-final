@@ -9,13 +9,17 @@ HEADERS = {
     "Content-Type": "application/json",
 }
 
-def call_openai_chat(prompt: str, model: str = "gpt-4o-mini"):
+def call_openai_chat(prompt: str, model: str = "gpt-4o-mini") -> str:
+    """
+    Call AI Pipe chat endpoint for text generation.
+    """
     url = f"{BASE_URL}/responses"
     payload = {"model": model, "input": prompt}
     response = requests.post(url, headers=HEADERS, json=payload)
     response.raise_for_status()
     data = response.json()
-    
+
+    # Parse AI Pipe chat output
     if "output" in data and len(data["output"]) > 0:
         text_parts = []
         for item in data["output"]:
@@ -26,6 +30,9 @@ def call_openai_chat(prompt: str, model: str = "gpt-4o-mini"):
     return ""
 
 def call_openai_embedding(texts, model: str = "text-embedding-3-small"):
+    """
+    Call AI Pipe embeddings endpoint for numerical vector representations.
+    """
     if isinstance(texts, str):
         texts = [texts]
     url = f"{BASE_URL}/embeddings"
@@ -33,4 +40,5 @@ def call_openai_embedding(texts, model: str = "text-embedding-3-small"):
     response = requests.post(url, headers=HEADERS, json=payload)
     response.raise_for_status()
     data = response.json()
+
     return [item["embedding"] for item in data.get("data", [])]
