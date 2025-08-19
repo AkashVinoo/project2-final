@@ -4,3 +4,4 @@ pandas
 numpy
 requests
 pydantic
+python-multipart   # required for handling file uploads with FastAPI
